@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <meta name="theme-color" content="#111827" />
+  <meta name="format-detection" content="telephone=no, email=no, address=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="飲酒許可チェック" />
+  <title>飲酒許可チェック</title>
+  <style>
+    :root {
+      --bg-top: #0b1220;
+      --bg-bottom: #111827;
+      --panel: rgba(17, 24, 39, 0.94);
+      --panel-2: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #f59e0b;
+      --danger: #ef4444;
+      --ok: #22c55e;
+      --border: #374151;
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      --radius-xl: 22px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --tap: 56px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+      padding:
+        max(14px, env(safe-area-inset-top))
+        max(14px, env(safe-area-inset-right))
+        calc(18px + env(safe-area-inset-bottom))
+        max(14px, env(safe-area-inset-left));
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    h1, h2, h3 {
+      margin: 0 0 12px;
+      line-height: 1.35;
+      letter-spacing: 0.01em;
+    }
+
+    h1 { font-size: 28px; }
+    h2 { font-size: 23px; }
+    h3 { font-size: 17px; }
+
+    .subtext {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+      margin: 0 0 18px;
+    }
+
+    .section-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      color: #111827;
+      background: var(--accent);
+      padding: 7px 11px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+      font-weight: 800;
+    }
+
+    .progress-note {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .question-list {
+      display: grid;
+      gap: 12px;
+      margin: 18px 0 0;
+    }
+
+    .question {
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      border-radius: var(--radius-lg);
+      padding: 15px;
+    }
+
+    .question-title {
+      font-size: 16px;
+      line-height: 1.65;
+      margin-bottom: 14px;
+      font-weight: 700;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: var(--radius-md);
+      min-height: var(--tap);
+      padding: 14px 18px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: scale(0.99); }
+
+    .primary {
+      background: var(--accent);
+      color: #111827;
+      width: 100%;
+      font-size: 17px;
+    }
+
+    .secondary {
+      background: #374151;
+      color: var(--text);
+      width: 100%;
+    }
+
+    .answer-btn {
+      background: #111827;
+      color: var(--text);
+      border: 1px solid #4b5563;
+    }
+
+    .answer-btn.active-yes {
+      background: rgba(34, 197, 94, 0.18);
+      border-color: rgba(34, 197, 94, 0.9);
+      color: #dcfce7;
+    }
+
+    .answer-btn.active-no {
+      background: rgba(239, 68, 68, 0.16);
+      border-color: rgba(239, 68, 68, 0.92);
+      color: #fee2e2;
+    }
+
+    .warning {
+      color: #fde68a;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      margin-top: 16px;
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    .action-stack {
+      position: sticky;
+      bottom: calc(10px + env(safe-area-inset-bottom));
+      z-index: 5;
+      margin-top: 18px;
+      display: grid;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 18px;
+      background: rgba(11, 18, 32, 0.78);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .result-box {
+      border-radius: 18px;
+      padding: 18px;
+      margin-top: 18px;
+      border: 1px solid;
+    }
+
+    .result-no {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+
+    .result-yes {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.35);
+    }
+
+    .result-title {
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+
+    .result-main {
+      font-size: 18px;
+      line-height: 1.7;
+      margin-bottom: 10px;
+      font-weight: 800;
+    }
+
+    .result-sub {
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 16px;
+      margin-bottom: 18px;
+    }
+
+    .result-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .pill {
+      background: #111827;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .fail-section {
+      margin-top: 12px;
+    }
+
+    .fail-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .fail-item {
+      background: rgba(17, 24, 39, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .fail-item-title {
+      font-size: 15px;
+      line-height: 1.65;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .fail-item-helper {
+      font-size: 14px;
+      line-height: 1.75;
+      color: #f3f4f6;
+    }
+
+    .hidden { display: none; }
+
+    @media (max-width: 640px) {
+      body {
+        padding:
+          max(12px, env(safe-area-inset-top))
+          max(12px, env(safe-area-inset-right))
+          calc(16px + env(safe-area-inset-bottom))
+          max(12px, env(safe-area-inset-left));
+      }
+
+      .card {
+        padding: 18px;
+        border-radius: 20px;
+      }
+
+      h1 { font-size: 25px; }
+      h2 { font-size: 21px; }
+      .question-title { font-size: 15px; }
+      .subtext { font-size: 15px; }
+      .result-title { font-size: 24px; }
+      .result-main { font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card" id="screen-start">
+      <div class="section-badge">飲酒許可チェック</div>
+      <h1>飲酒許可チェック</h1>
+      <p class="subtext">今日は飲んでいい日か？ ルールで判断する。</p>
+      <div class="action-stack">
+        <button class="primary" id="start-btn">チェックを始める</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="screen-premise">
+      <div class="section-badge">STEP 1 / 3</div>
+      <div class="progress-note">前提条件を確認する</div>
+      <h2>前提条件の確認</h2>
+      <p class="subtext">以下をすべて満たしていない場合、今日は飲まない。</p>
+      <div class="question-list" id="premise-list"></div>
+      <div class="warning hidden" id="premise-warning">すべて回答してから次へ進んでください。</div>
+      <div class="action-stack">
+        <button class="primary" id="to-daily-btn">当日チェックへ</button>
+        <button class="secondary" id="back-to-start-btn">戻る</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="screen-daily">
+      <div class="section-badge">STEP 2 / 3</div>
+      <div class="progress-note">当日の状態を確認する</div>
+      <h2>飲酒前チェック</h2>
+      <p class="subtext">1つでもNOなら、今日は飲まない。</p>
+      <div class="question-list" id="daily-list"></div>
+      <div class="warning hidden" id="daily-warning">すべて回答してから判定してください。</div>
+      <div class="action-stack">
+        <button class="primary" id="judge-btn">判定する</button>
+        <button class="secondary" id="back-to-premise-btn">戻る</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="screen-result">
+      <div class="section-badge">STEP 3 / 3</div>
+      <div class="progress-note">判定結果を確認する</div>
+      <h2>判定結果</h2>
+      <div id="result-box" class="result-box">
+        <div id="result-title" class="result-title"></div>
+        <div id="result-main" class="result-main"></div>
+        <div id="result-sub" class="result-sub"></div>
+        <div id="result-meta" class="result-meta"></div>
+        <div id="fail-section" class="fail-section hidden">
+          <h3>該当項目</h3>
+          <div id="fail-grid" class="fail-grid"></div>
+        </div>
+      </div>
+      <div class="action-stack">
+        <button class="primary" id="restart-btn">最初に戻る</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const premiseQuestions = [
+      '今週まだ家飲みしていない（週1回まで）',
+      '前回の飲酒から2日以上空いている',
+      '直近7日間の禁酒を達成している'
+    ];
+
+    const premiseHelpers = [
+      '今週はもう飲んでいる。今日は許可日ではない。',
+      '空けると決めた以上、まだその日ではない。',
+      '先に禁酒を達成する。それが今回の条件。'
+    ];
+
+    const dailyQuestions = [
+      '直近1週間で筋トレしているか？',
+      '直近1週間でFXに触れているか？',
+      '明日の予定に支障がないか？',
+      'ストレス解消が主目的になっていないか？',
+      '本当に楽しめる状況か？（惰性NG）',
+      '直近3日間で生活崩れていないか？',
+      '飲む量を事前に決めているか？',
+      'その量だけしか“物理的に用意していないか？”'
+    ];
+
+    const dailyHelpers = [
+      'やることをやっていない状態では、今日は飲まない。',
+      '積むべきものを積んでいない。今日は見送る。',
+      '明日に響く飲酒は、今日の正解ではない。',
+      'それは楽しむ酒ではなく、逃げる酒',
+      '楽しめない飲酒に意味はない。',
+      '生活が崩れている時の飲酒は、立て直しを遅らせる。',
+      '飲む前に量を決められないなら、今日はやめる。',
+      '飲みすぎを防げない準備なら、今日は飲まない。'
+    ];
+
+    const answers = {
+      premise: Array(premiseQuestions.length).fill(null),
+      daily: Array(dailyQuestions.length).fill(null)
+    };
+
+    const screens = {
+      start: document.getElementById('screen-start'),
+      premise: document.getElementById('screen-premise'),
+      daily: document.getElementById('screen-daily'),
+      result: document.getElementById('screen-result')
+    };
+
+    function showScreen(name) {
+      Object.values(screens).forEach(screen => screen.classList.add('hidden'));
+      screens[name].classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderQuestions(containerId, type, questions) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      questions.forEach((text, index) => {
+        const item = document.createElement('div');
+        item.className = 'question';
+
+        const title = document.createElement('div');
+        title.className = 'question-title';
+        title.textContent = `${index + 1}. ${text}`;
+
+        const row = document.createElement('div');
+        row.className = 'button-row';
+
+        const yesBtn = document.createElement('button');
+        yesBtn.className = 'answer-btn';
+        yesBtn.textContent = 'YES';
+        yesBtn.addEventListener('click', () => setAnswer(type, index, true));
+
+        const noBtn = document.createElement('button');
+        noBtn.className = 'answer-btn';
+        noBtn.textContent = 'NO';
+        noBtn.addEventListener('click', () => setAnswer(type, index, false));
+
+        if (answers[type][index] === true) yesBtn.classList.add('active-yes');
+        if (answers[type][index] === false) noBtn.classList.add('active-no');
+
+        row.appendChild(yesBtn);
+        row.appendChild(noBtn);
+        item.appendChild(title);
+        item.appendChild(row);
+        container.appendChild(item);
+      });
+    }
+
+    function setAnswer(type, index, value) {
+      answers[type][index] = value;
+
+      if (type === 'premise') {
+        renderQuestions('premise-list', 'premise', premiseQuestions);
+        document.getElementById('premise-warning').classList.add('hidden');
+
+        if (value === false) {
+          showDeniedResult('前提条件で終了', [
+            {
+              question: premiseQuestions[index],
+              helper: premiseHelpers[index]
+            }
+          ]);
+        }
+      } else {
+        renderQuestions('daily-list', 'daily', dailyQuestions);
+        document.getElementById('daily-warning').classList.add('hidden');
+      }
+    }
+
+    function allAnswered(type) {
+      return answers[type].every(v => v !== null);
+    }
+
+    function resetType(type, questions, containerId, warningId) {
+      answers[type] = Array(questions.length).fill(null);
+      renderQuestions(containerId, type, questions);
+      document.getElementById(warningId).classList.add('hidden');
+    }
+
+    function clearPremiseAnswers() {
+      resetType('premise', premiseQuestions, 'premise-list', 'premise-warning');
+    }
+
+    function clearDailyAnswers() {
+      resetType('daily', dailyQuestions, 'daily-list', 'daily-warning');
+    }
+
+    function resetApp() {
+      clearPremiseAnswers();
+      clearDailyAnswers();
+      hideFailSection();
+      showScreen('start');
+    }
+
+    function hideFailSection() {
+      document.getElementById('fail-section').classList.add('hidden');
+      document.getElementById('fail-grid').innerHTML = '';
+    }
+
+    function showDeniedResult(stageLabel, failedItems) {
+      const resultBox = document.getElementById('result-box');
+      const resultTitle = document.getElementById('result-title');
+      const resultMain = document.getElementById('result-main');
+      const resultSub = document.getElementById('result-sub');
+      const resultMeta = document.getElementById('result-meta');
+      const failSection = document.getElementById('fail-section');
+      const failGrid = document.getElementById('fail-grid');
+
+      resultBox.className = 'result-box result-no';
+      resultTitle.textContent = '今日は飲まない';
+      resultMain.textContent = '条件を満たしていない。今日は飲む日ではない。';
+      resultSub.textContent = '判断はすでに終わっている。従うだけでいい。';
+
+      resultMeta.innerHTML = `
+        <div class="pill">${stageLabel}</div>
+        <div class="pill">NO項目 ${failedItems.length}件</div>
+      `;
+
+      failGrid.innerHTML = failedItems.map((item, index) => `
+        <div class="fail-item">
+          <div class="fail-item-title">${index + 1}. ${item.question}</div>
+          <div class="fail-item-helper">${item.helper}</div>
+        </div>
+      `).join('');
+
+      failSection.classList.remove('hidden');
+      showScreen('result');
+    }
+
+    function showAllowedResult() {
+      const resultBox = document.getElementById('result-box');
+      const resultTitle = document.getElementById('result-title');
+      const resultMain = document.getElementById('result-main');
+      const resultSub = document.getElementById('result-sub');
+      const resultMeta = document.getElementById('result-meta');
+
+      resultBox.className = 'result-box result-yes';
+      resultTitle.textContent = '飲酒可';
+      resultMain.textContent = 'ルールクリア。今日は許可日。';
+      resultSub.textContent = '楽しむために飲む。崩すために飲まない。';
+      resultMeta.innerHTML = `
+        <div class="pill">当日チェック完了</div>
+        <div class="pill">NO項目 0件</div>
+      `;
+
+      hideFailSection();
+      showScreen('result');
+    }
+
+    function judgeDaily() {
+      const failedDaily = dailyQuestions
+        .map((question, index) => ({
+          question,
+          helper: dailyHelpers[index],
+          failed: answers.daily[index] === false
+        }))
+        .filter(item => item.failed)
+        .map(({ question, helper }) => ({ question, helper }));
+
+      if (failedDaily.length > 0) {
+        showDeniedResult('当日チェックで終了', failedDaily);
+      } else {
+        showAllowedResult();
+      }
+    }
+
+    document.getElementById('start-btn').addEventListener('click', () => {
+      clearPremiseAnswers();
+      clearDailyAnswers();
+      showScreen('premise');
+    });
+
+    document.getElementById('to-daily-btn').addEventListener('click', () => {
+      if (!allAnswered('premise')) {
+        document.getElementById('premise-warning').classList.remove('hidden');
+        return;
+      }
+      clearDailyAnswers();
+      showScreen('daily');
+    });
+
+    document.getElementById('judge-btn').addEventListener('click', () => {
+      if (!allAnswered('daily')) {
+        document.getElementById('daily-warning').classList.remove('hidden');
+        return;
+      }
+      judgeDaily();
+    });
+
+    document.getElementById('back-to-start-btn').addEventListener('click', () => {
+      clearPremiseAnswers();
+      clearDailyAnswers();
+      showScreen('start');
+    });
+
+    document.getElementById('back-to-premise-btn').addEventListener('click', () => {
+      clearPremiseAnswers();
+      clearDailyAnswers();
+      showScreen('premise');
+    });
+
+    document.getElementById('restart-btn').addEventListener('click', resetApp);
+
+    renderQuestions('premise-list', 'premise', premiseQuestions);
+    renderQuestions('daily-list', 'daily', dailyQuestions);
+  </script>
+</body>
+</html>
